@@ -34,16 +34,23 @@ export const createMemory = async (req, res) => {
 
 
 // get single memory
-// user will send a id 
+// user will send a id
+
+export const getMemory = () => { };
 
 
 
 // get all memories
 // user will send his email or _id
+export const getMemories = () => { };
 
+
+// update memory
+export const updateMemory = () => { };
 
 
 // delete memory as homework
+export const deleteMemory = () => { };
 
 // delete single memory
 // need some kind of unique identification
