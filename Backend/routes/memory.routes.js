@@ -1,23 +1,23 @@
 import { Router } from "express";
-import { createMemory, getMemories, getMemory, updateMemory, deleteMemory } from "../controllers/memory.controller.js";
+import { createMemory, getMemory, getMemories, updateMemory, deleteMemory } from "../controllers/memory.controller.js";
 import upload from "../middlewares/multer.middleware.js";
+import { getAnalytics, getAllUsers, deleteuser } from "../controllers/admin.controller.js"
+
 import { authenticate } from "../middlewares/auth.middleware.js";
-import { deleteuser, getAllUsers, getAnalytics } from "../controllers/admin.controller.js";
 
-
+import { isAdmin } from "../middlewares/auth.middleware.js";
 
 const memoryRoutes = Router();
 
 // admin routes
-memoryRoutes.get("/admin/analytics", authenticate, getAnalytics);
-memoryRoutes.get("/admin/users", authenticate, getAllUsers);
-memoryRoutes.delete("/admin/users/:userId", authenticate, deleteuser); 
+memoryRoutes.get("/admin/analytics", authenticate, isAdmin, getAnalytics);
+memoryRoutes.get("/admin/users", authenticate, isAdmin, getAllUsers);
+memoryRoutes.delete("/admin/users/:userId", authenticate, isAdmin, deleteuser); // Fixed: Added leading slash
 
 // user routes
 memoryRoutes.post("/", authenticate, upload.single('image'), createMemory);
-memoryRoutes.get("/", getMemories);
-memoryRoutes.get("/:id", getMemory);           
+memoryRoutes.get("/", authenticate, getMemories);
+memoryRoutes.get("/:id", authenticate, getMemory);           
 memoryRoutes.put("/:id", authenticate, updateMemory);      
-memoryRoutes.delete("/:id", authenticate, deleteMemory);  
-
-export default memoryRoutes
+memoryRoutes.delete("/:id", authenticate, deleteMemory); 
+export default memoryRoutes;

@@ -1,72 +1,104 @@
 import { useEffect, useState } from "react";
 import MemoryCard from "../components/MemoryCard";
 import CreateMemoryModal from "../components/CreateMemoryModal";
-import DummyData from "../assets/data"; // Array of Objects
 
+const API_URL = "http://localhost:3001"
 const Layout = () => {
-  const token = true; // mock auth
-
   const [memories, setMemories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // homework
 
   const ITEMS_PER_PAGE = 8;
 
+  // can get token from auth state also
   const fetchMemories = async (page = 1) => {
     setLoading(true);
+
     try {
-      // Simulate pagination logic using DummyData
-      const startIndex = (page - 1) * ITEMS_PER_PAGE;
-      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const token = localStorage.getItem("token");
 
-      const paginatedData = DummyData.slice(startIndex, endIndex);
-      const pages = Math.ceil(DummyData.length / ITEMS_PER_PAGE);
+      const response = await fetch(
+        `${API_URL}/api/memories?page=${page}&limit=${ITEMS_PER_PAGE}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      setMemories(paginatedData);
-      setTotalPages(pages);
-      setCurrentPage(page);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch Memories");
+      }
+
+      setMemories(data.memories || []);
+      setTotalPages(data.totalPages || 1);
+      setCurrentPage(data.currentPage || 1);
     } catch (error) {
-      console.error("Error simulating fetch:", error);
+      console.log(error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchMemories(currentPage);
-    }
+    fetchMemories(currentPage);
   }, [currentPage]);
 
   const handlePageClick = (page) => {
-    if (page !== currentPage) {
-      fetchMemories(page);
-    }
+    if (page < 1 || page > totalPages) return; // Prevent invalid page clicks
+
+    fetchMemories(page);
   };
 
-  const handleAddMemory = (newMemory) => {
-    const memoryObj = {
-      id: Date.now(),
-      image: URL.createObjectURL(newMemory.image),
-      title: newMemory.title,
-      description: newMemory.description,
-      date: new Date().toLocaleDateString(),
-    };
+  const handleAddMemory = async (newMemory) => {
+    const token = localStorage.getItem("token");
+    try {
 
-    const updatedData = [memoryObj, ...DummyData];
-    const paginatedData = updatedData.slice(0, ITEMS_PER_PAGE);
+      if(!newMemory.image || !newMemory.title || !newMemory.description) {
+        console.log("Title and description are required");
+        return;
+      }
 
-    setMemories(paginatedData);
-    setTotalPages(Math.ceil(updatedData.length / ITEMS_PER_PAGE));
-    setCurrentPage(1);
+      const formData = new FormData();
+      formData.append("image", newMemory.image);
+      formData.append("title", newMemory.title);
+      formData.append("description", newMemory.description);
+
+      const response = await fetch(`${API_URL}/api/memories`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error creating memory:", errorData.message);
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      // setMemories((prev) => [...prev, data.memory]);
+
+      fetchMemories(currentPage); // Refresh the list after adding a new memory
+      setCurrentPage(1); // Reset to the first page
+      setShowModal(false); // Close the modal after saving
+    } catch (error) {
+      console.log("Error adding memory:", error.message);
+    }
   };
 
   return (
     <div>
-
       {/* Main Section */}
       <div style={{ display: "flex", padding: "20px", gap: "20px" }}>
         {/* Left Section (70%) */}
@@ -83,7 +115,7 @@ const Layout = () => {
                 }}
               >
                 {memories.map((memory) => (
-                  <MemoryCard key={memory.id} {...memory} />
+                  <MemoryCard key={memory._id} {...memory} />
                 ))}
               </div>
 

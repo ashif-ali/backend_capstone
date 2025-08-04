@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,6 +20,11 @@ const Header = () => {
         <Link to="/profile" style={styles.link}>
           Profile
         </Link>
+        {user.role === "user" ? (
+          <Link to="/admin" style={styles.link}>
+            Admin
+          </Link>
+        ) : null}
         <button onClick={handleLogout} style={styles.button}>
           Logout
         </button>
