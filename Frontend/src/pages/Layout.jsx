@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import MemoryCard from "../components/MemoryCard";
 import CreateMemoryModal from "../components/CreateMemoryModal";
 
-const API_URL = "http://localhost:3001"
+const API_URL = import.meta.env.VITE_API_URL;
 const Layout = () => {
   const [memories, setMemories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
